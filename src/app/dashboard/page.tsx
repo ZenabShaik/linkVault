@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
   const router = useRouter();
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [user, setUser] = useState<any>(null);
   const [bookmarks, setBookmarks] = useState<any[]>([]);
@@ -43,10 +44,21 @@ useEffect(() => {
     .channel("bookmarks")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "bookmarks" },
-      (payload) => {
-        fetchBookmarks();
-      }
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "bookmarks",
+      },
+      fetchBookmarks
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "DELETE",
+        schema: "public",
+        table: "bookmarks",
+      },
+      fetchBookmarks
     )
     .subscribe();
 
@@ -54,6 +66,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, []);
+
 
 
   /* ================= ADD ================= */
@@ -101,9 +114,16 @@ useEffect(() => {
 };
 
   /* ================= COPY ================= */
-  const copyLink = (link: string) => {
-    navigator.clipboard.writeText(link);
-  };
+  const copyLink = async (id: string, link: string) => {
+  await navigator.clipboard.writeText(link);
+
+  setCopiedId(String(id));
+
+  setTimeout(() => {
+    setCopiedId(null);
+  }, 2000);
+};
+
 
   /* ================= LOGOUT ================= */
   const logout = async () => {
@@ -211,12 +231,18 @@ useEffect(() => {
                   {/* ACTIONS */}
                   <div className="flex gap-3 shrink-0">
 
-                    <button
-                      onClick={() => copyLink(bm.url)}
-                      className="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm transition"
-                    >
-                      Copy
-                    </button>
+                        <button
+  onClick={() => copyLink(String(bm.id), bm.url)}
+  className={`px-4 py-2 rounded-lg text-sm transition font-medium ${
+    copiedId === String(bm.id)
+      ? "bg-green-500 text-white"
+      : "bg-slate-700 hover:bg-slate-600 text-white"
+  }`}
+>
+  {copiedId === String(bm.id) ? "✔ Copied!" : "Copy"}
+</button>
+
+
 
                     <button
                       onClick={() => deleteBookmark(bm.id)}
