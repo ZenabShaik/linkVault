@@ -27,10 +27,23 @@ checkSession();
 }, [router]);
 
 const handleLogin = async () => {
-await supabase.auth.signInWithOAuth({
-provider: "google",
-});
+  const forceChooser = localStorage.getItem("force_google_chooser");
+
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: forceChooser
+      ? {
+          queryParams: {
+            prompt: "select_account",
+          },
+        }
+      : undefined,
+  });
+
+  // Clear flag after using
+  localStorage.removeItem("force_google_chooser");
 };
+
 
 if (loading)
 return ( <div className="h-screen flex items-center justify-center bg-black text-white">

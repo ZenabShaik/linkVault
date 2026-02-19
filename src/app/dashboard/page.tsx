@@ -122,9 +122,14 @@ useEffect(() => {
 
   /* ================= LOGOUT ================= */
   const logout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
+  await supabase.auth.signOut();
+
+  // 👇 Tell app to force chooser next time
+  localStorage.setItem("force_google_chooser", "true");
+
+  router.push("/");
+};
+
 
   if (!user)
     return <p className="text-center mt-20 text-white">Loading...</p>;
